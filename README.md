@@ -1,2 +1,2 @@
-# portAudioPlugin
-Port audio plugin
+# Audio system plugin
+Gsage engine audio system
