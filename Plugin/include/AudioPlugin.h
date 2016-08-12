@@ -1,3 +1,5 @@
+#ifndef _AudioPlugin_H_
+#define _AudioPlugin_H_
 /*
 -----------------------------------------------------------------------------
 This file is a part of Gsage engine
@@ -24,18 +26,38 @@ THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
 
-#include "AudioComponent.h"
+#include "IPlugin.h"
+
+#if GSAGE_PLATFORM == GSAGE_WIN32
+#ifdef PLUGIN_EXPORT
+#define PluginExport __declspec (dllexport)
+#else
+#define PluginExport __declspec (dllimport)
+#endif
+#else
+#define PluginExport
+#endif
 
 namespace Gsage {
-
-  const std::string AudioComponent::SYSTEM = "audio";
-
-  AudioComponent::AudioComponent()
+  class Engine;
+  class LuaInterface;
+  class AudioPlugin : public IPlugin
   {
-  }
+    public:
+      AudioPlugin();
+      virtual ~AudioPlugin();
 
-  AudioComponent::~AudioComponent()
-  {
-  }
+      const std::string& getName() const;
+      /**
+       * Registers AudioSystem
+       */
+      bool install();
 
+      /**
+       * Unregisters AudioSystem
+       */
+      void uninstall();
+  };
 }
+
+#endif

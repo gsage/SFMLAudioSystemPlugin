@@ -25,8 +25,83 @@ THE SOFTWARE.
 */
 
 #include "AudioSystem.h"
+#include "Logger.h"
+#include <SFML/Audio.hpp>
+
+#include <condition_variable>
 
 namespace Gsage {
+
+  AsyncPlayer::AsyncPlayer()
+    : mThread(0)
+  {
+  }
+
+  AsyncPlayer::~AsyncPlayer()
+  {
+    deleteThread();
+  }
+
+  void AsyncPlayer::play(const std::string& fileName, AsyncPlayer::PlayType type) 
+  {
+    deleteThread();
+    mStop = false;
+    switch(type)
+    {
+      case MUSIC:
+        // Load a music file
+        mThread = new std::thread(&AsyncPlayer::playMusic, this, fileName);
+        break;
+      case SOUND:
+        // Load a sound buffer from a wav file
+        mThread = new std::thread(&AsyncPlayer::playSound, this, fileName);
+        break;
+    }
+  }
+
+  void AsyncPlayer::playMusic(const std::string& fileName)
+  {
+    sf::Music music;
+    if (!music.openFromFile(fileName.c_str()))
+      return;
+    music.play();
+    while (music.getStatus() == sf::Music::Playing && !mStop)
+    {
+      // Leave some CPU time for other processes
+      sf::sleep(sf::milliseconds(100));
+    }
+  }
+
+  void AsyncPlayer::playSound(const std::string& fileName)
+  {
+    sf::SoundBuffer buffer;
+    sf::Sound sound(buffer);
+    if (!buffer.loadFromFile(fileName.c_str()))
+      return;
+
+    // Create a sound instance and play it
+    sound.play();
+    while (sound.getStatus() == sf::Sound::Playing && !mStop)
+    {
+      // Leave some CPU time for other processes
+      sf::sleep(sf::milliseconds(100));
+      LOG(INFO) << "Playing";
+    }
+  }
+
+  void AsyncPlayer::stop()
+  {
+    mStop = true;
+  }
+
+  void AsyncPlayer::deleteThread()
+  {
+    stop();
+    if(mThread) {
+      mThread->join();
+      delete mThread;
+    }
+  }
 
   AudioSystem::AudioSystem()
   {
@@ -34,6 +109,23 @@ namespace Gsage {
 
   AudioSystem::~AudioSystem()
   {
+  }
+
+  void AudioSystem::updateComponent(AudioComponent* component, Entity* entity, const double& time)
+  {
+    // nothing
+  }
+
+  void AudioSystem::playSound(const std::string& fileName)
+  {
+    mPlayers.push_back(AsyncPlayer());
+    mPlayers.back().play(fileName, AsyncPlayer::SOUND);
+  }
+
+  void AudioSystem::playMusic(const std::string& fileName)
+  {
+    mPlayers.push_back(AsyncPlayer());
+    mPlayers.back().play(fileName, AsyncPlayer::MUSIC);
   }
 
 }

@@ -27,12 +27,55 @@ THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
 
+#include "ComponentStorage.h"
+#include "AudioComponent.h"
+#include <string>
+#include <thread>
+
 namespace Gsage {
-  class AudioSystem
+  class AsyncPlayer
   {
     public:
+      enum PlayType {
+        MUSIC,
+        SOUND
+      };
+
+      AsyncPlayer();
+      virtual ~AsyncPlayer();
+      void play(const std::string& fileName, PlayType type);
+
+      void stop();
+    private:
+
+      void playSound(const std::string& fileName);
+      void playMusic(const std::string& fileName);
+
+      void deleteThread();
+      bool mStop;
+      std::thread* mThread;
+  };
+
+  class AudioSystem : public ComponentStorage<AudioComponent>
+  {
+    public:
+      static const std::string SYSTEM;
       AudioSystem();
       virtual ~AudioSystem();
+      /**
+       * Update a single component
+       */
+      virtual void updateComponent(AudioComponent* component, Entity* entity, const double& time);
+
+      void playSound(const std::string& filename);
+
+      void playMusic(const std::string& filename);
+
+    private:
+
+      typedef std::vector<AsyncPlayer> AsyncPlayers;
+      AsyncPlayers mPlayers;
+
   };
 }
 

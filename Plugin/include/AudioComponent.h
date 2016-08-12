@@ -27,10 +27,13 @@ THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
 
+#include "Component.h"
+
 namespace Gsage {
-  class AudioComponent
+  class AudioComponent : public Component
   {
     public:
+      static const std::string SYSTEM;
       AudioComponent();
       virtual ~AudioComponent();
   };

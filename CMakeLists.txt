@@ -36,6 +36,9 @@ endif(UNIX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-find_package(PortAudio REQUIRED)
+find_package(LuaJIT REQUIRED)
+find_package(Luabind REQUIRED)
+find_package(SFML REQUIRED system audio)
+find_package(Gsage REQUIRED)
 
 add_subdirectory(Plugin)
