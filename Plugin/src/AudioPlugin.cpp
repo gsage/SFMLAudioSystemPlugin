@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This file is a part of Gsage engine
+This file is a part of Gsage engine SFML audio system plugin
 
 Copyright (c) 2014-2016 Artem Chernyshev
 
@@ -51,23 +51,28 @@ namespace Gsage {
   bool AudioPlugin::install()
   {
     AudioSystem* audio = mEngine->addSystem<AudioSystem>();
-    if(mLuaInterface && mLuaInterface->getState())
+    if (mLuaInterface && mLuaInterface->getState())
     {
       luabind::module(mLuaInterface->getState())
       [
         luabind::class_<AudioSystem>("AudioSystem")
           .def("playSound", &AudioSystem::playSound)
           .def("playMusic", &AudioSystem::playMusic)
+          .def("stopPlayer", &AudioSystem::stopPlayer)
       ];
-
       luabind::globals(mLuaInterface->getState())["audio"] = audio;
     }
+    else
+    {
+      LOG(WARNING) << "Lua bindings for audio plugin were not registered due to nil lua state";
+    }
+
     return true;
   }
 
   void AudioPlugin::uninstall()
   {
-    // not supported yet
+    mEngine->removeSystem("audio");
   }
 
   AudioPlugin* audioPlugin = NULL;
@@ -76,7 +81,6 @@ namespace Gsage {
   {
     if(audioPlugin != NULL)
     {
-      LOG(WARNING) << "Portaudio plugin is already installed";
       return false;
     }
     audioPlugin = new AudioPlugin();
@@ -89,8 +93,11 @@ namespace Gsage {
       return true;
 
     bool res = facade->uninstallPlugin(audioPlugin);
+    if(!res)
+      return false;
     delete audioPlugin;
     audioPlugin = NULL;
-    return res;
+    return true;
   }
 }
+

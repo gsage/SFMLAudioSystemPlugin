@@ -12,6 +12,15 @@ include_directories(
   ${LUABIND_INCLUDE_DIRS}
 )
 
+if(WIN32)
+  add_definitions( -DWIN32 )
+endif(WIN32)
+
+if(UNIX)
+  set(CMAKE_CXX_FLAGS "-std=c++0x -fPIC ${CMAKE_CXX_FLAGS}")
+endif(UNIX)
+
+add_definitions(-DPLUGIN_EXPORT -D_USRDLL)
 add_library(${LIB_NAME} SHARED ${headers} ${sources})
 
 set_target_properties(${LIB_NAME} PROPERTIES DEBUG_POSTFIX _d)
