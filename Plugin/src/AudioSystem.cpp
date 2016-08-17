@@ -27,24 +27,24 @@ THE SOFTWARE.
 #include "AudioSystem.h"
 #include "Logger.h"
 #include <SFML/Audio.hpp>
-
 #include <condition_variable>
 
 namespace Gsage {
 
   AsyncPlayer::AsyncPlayer()
     : mThread(0)
+    , mPlaying(false)
   {
   }
 
   AsyncPlayer::~AsyncPlayer()
   {
-    deleteThread();
+    stop();
   }
 
   void AsyncPlayer::play(const std::string& fileName, AsyncPlayer::PlayType type) 
   {
-    deleteThread();
+    stop();
     mStop = false;
     switch(type)
     {
@@ -65,11 +65,13 @@ namespace Gsage {
     if (!music.openFromFile(fileName.c_str()))
       return;
     music.play();
+    mPlaying = true;
     while (music.getStatus() == sf::Music::Playing && !mStop)
     {
       // Leave some CPU time for other processes
       sf::sleep(sf::milliseconds(100));
     }
+    mPlaying = false;
   }
 
   void AsyncPlayer::playSound(const std::string& fileName)
@@ -81,34 +83,47 @@ namespace Gsage {
 
     // Create a sound instance and play it
     sound.play();
+    mPlaying = true;
     while (sound.getStatus() == sf::Sound::Playing && !mStop)
     {
       // Leave some CPU time for other processes
       sf::sleep(sf::milliseconds(100));
-      LOG(INFO) << "Playing";
     }
+    mPlaying = false;
   }
 
   void AsyncPlayer::stop()
   {
     mStop = true;
-  }
-
-  void AsyncPlayer::deleteThread()
-  {
-    stop();
     if(mThread) {
       mThread->join();
       delete mThread;
+      mThread = 0;
     }
   }
 
-  AudioSystem::AudioSystem()
+  bool AsyncPlayer::isPlaying() const
   {
+    return mPlaying;
+  }
+
+  AudioSystem::AudioSystem()
+    : mMaxPlayersCount(256)
+  {
+    mPlayers.reserve(mMaxPlayersCount);
   }
 
   AudioSystem::~AudioSystem()
   {
+    for(AsyncPlayers::iterator it = mPlayers.begin(); it != mPlayers.end(); ++it){
+      (*it).mStop = true;
+    }
+  }
+
+  bool AudioSystem::initialize(const DataNode& settings)
+  {
+    EngineSystem::initialize(settings);
+    mMaxPlayersCount = settings.get("playersCount", mMaxPlayersCount);
   }
 
   void AudioSystem::updateComponent(AudioComponent* component, Entity* entity, const double& time)
@@ -116,16 +131,49 @@ namespace Gsage {
     // nothing
   }
 
-  void AudioSystem::playSound(const std::string& fileName)
+  int AudioSystem::playSound(const std::string& fileName)
   {
-    mPlayers.push_back(AsyncPlayer());
-    mPlayers.back().play(fileName, AsyncPlayer::SOUND);
+    return play(fileName, AsyncPlayer::SOUND);
   }
 
-  void AudioSystem::playMusic(const std::string& fileName)
+  int AudioSystem::playMusic(const std::string& fileName)
   {
-    mPlayers.push_back(AsyncPlayer());
-    mPlayers.back().play(fileName, AsyncPlayer::MUSIC);
+    return play(fileName, AsyncPlayer::MUSIC);
   }
 
+  bool AudioSystem::stopPlayer(int handle)
+  {
+    if(handle < 0 || handle >= mPlayers.size()){
+      return false;
+    }
+
+    mPlayers[handle].stop();
+    return true;
+  }
+
+  int AudioSystem::play(const std::string& fileName, AsyncPlayer::PlayType playType)
+  {
+    int index = -1;
+
+    for(int i = 0; i < mPlayers.size(); i++) {
+      if(!mPlayers[i].isPlaying()) {
+        index = i;
+      }
+    }
+
+    if(index == -1)
+    {
+      if(mPlayers.size() >= mMaxPlayersCount)
+      {
+        LOG(ERROR) << "Can't play sound " << fileName << ": max number of async sound players is reached";
+        return -1;
+      }
+
+      mPlayers.push_back(AsyncPlayer());
+      index = mPlayers.size() - 1;
+    }
+
+    mPlayers[index].play(fileName, playType);
+    return index;
+  }
 }

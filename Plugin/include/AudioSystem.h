@@ -33,6 +33,10 @@ THE SOFTWARE.
 #include <thread>
 
 namespace Gsage {
+  class AudioSystem;
+  /**
+   * AsyncPlayer plays sound or music in a separate thread
+   */
   class AsyncPlayer
   {
     public:
@@ -43,16 +47,34 @@ namespace Gsage {
 
       AsyncPlayer();
       virtual ~AsyncPlayer();
+      /**
+       * Play file
+       *
+       * @param fileName: path to the sound file
+       * @param type: play type AsyncPlayer::PlayType SOUND or MUSIC
+       *
+       * Sound is loaded into memory, while music does not.
+       */
       void play(const std::string& fileName, PlayType type);
 
+      /**
+       * Stop AsyncPlayer playback and remove current thread
+       */
       void stop();
+
+      /**
+       * If thread is in the loop of playback this will return true
+       */
+      bool isPlaying() const;
     private:
+
+      friend class AudioSystem;
 
       void playSound(const std::string& fileName);
       void playMusic(const std::string& fileName);
 
-      void deleteThread();
       bool mStop;
+      bool mPlaying;
       std::thread* mThread;
   };
 
@@ -62,19 +84,48 @@ namespace Gsage {
       static const std::string SYSTEM;
       AudioSystem();
       virtual ~AudioSystem();
+
+      /**
+       * Initialize audio system
+       * @param settings: Settings of the system
+       */
+      virtual bool initialize(const DataNode& settings);
       /**
        * Update a single component
        */
       virtual void updateComponent(AudioComponent* component, Entity* entity, const double& time);
 
-      void playSound(const std::string& filename);
+      /**
+       * Load the file into memory and play it
+       *
+       * @param filename: Sound file path
+       * @returns: int handle of the player
+       */
+      int playSound(const std::string& filename);
 
-      void playMusic(const std::string& filename);
+      /**
+       * Buffer file and play it.
+       *
+       * @param filename: Sound file path
+       * @returns: int handle of the player
+       */
+      int playMusic(const std::string& filename);
+
+      /**
+       * Stops the player playback
+       *
+       * @param handle: int handle, returned from the playSound or playMusic methods
+       */
+      bool stopPlayer(int handle);
 
     private:
 
+      int play(const std::string& fileName, AsyncPlayer::PlayType playType);
+
       typedef std::vector<AsyncPlayer> AsyncPlayers;
       AsyncPlayers mPlayers;
+
+      int mMaxPlayersCount;
 
   };
 }
