@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "Component.h"
 
 namespace Gsage {
-  class AudioComponent : public Component
+  class AudioComponent : public EntityComponent
   {
     public:
       static const std::string SYSTEM;

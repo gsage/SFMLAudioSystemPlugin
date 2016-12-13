@@ -29,7 +29,8 @@ THE SOFTWARE.
 #include "GsageFacade.h"
 #include "Logger.h"
 #include "lua/LuaInterface.h"
-#include <luabind/luabind.hpp>
+#include "sol.hpp"
+#include "Engine.h"
 
 namespace Gsage {
 
@@ -48,31 +49,33 @@ namespace Gsage {
     return PLUGIN_NAME;
   }
 
-  bool AudioPlugin::install()
+  bool AudioPlugin::installImpl()
   {
-    AudioSystem* audio = mEngine->addSystem<AudioSystem>();
+    mFacade->registerSystemFactory<AudioSystem>();
+    return true;
+  }
+
+  void AudioPlugin::setupLuaBindings()
+  {
     if (mLuaInterface && mLuaInterface->getState())
     {
-      luabind::module(mLuaInterface->getState())
-      [
-        luabind::class_<AudioSystem>("AudioSystem")
-          .def("playSound", &AudioSystem::playSound)
-          .def("playMusic", &AudioSystem::playMusic)
-          .def("stopPlayer", &AudioSystem::stopPlayer)
-      ];
-      luabind::globals(mLuaInterface->getState())["audio"] = audio;
+      sol::state_view lua = *mLuaInterface->getSolState();
+      lua.new_usertype<AudioSystem>("AudioSystem",
+          "playSound", &AudioSystem::playSound,
+          "playMusic", &AudioSystem::playMusic,
+          "stopPlayer", &AudioSystem::stopPlayer);
+
+      lua["Engine"]["audio"] = &Engine::getSystem<AudioSystem>;
     }
     else
     {
       LOG(WARNING) << "Lua bindings for audio plugin were not registered due to nil lua state";
     }
-
-    return true;
   }
 
-  void AudioPlugin::uninstall()
+  void AudioPlugin::uninstallImpl()
   {
-    mEngine->removeSystem("audio");
+    mFacade->removeSystemFactory<AudioSystem>();
   }
 
   AudioPlugin* audioPlugin = NULL;

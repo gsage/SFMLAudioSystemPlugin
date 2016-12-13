@@ -82,6 +82,7 @@ namespace Gsage {
   {
     public:
       static const std::string SYSTEM;
+      static const std::string ID;
       AudioSystem();
       virtual ~AudioSystem();
 
@@ -89,7 +90,7 @@ namespace Gsage {
        * Initialize audio system
        * @param settings: Settings of the system
        */
-      virtual bool initialize(const DataNode& settings);
+      virtual bool initialize(const Dictionary& settings);
       /**
        * Update a single component
        */

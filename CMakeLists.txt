@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
-project(portAudioPlugin)
+cmake_minimum_required(VERSION 3.1)
+project(SFMLAudioPlugin)
 
 if(APPLE)
 	# This has to be before most other options so CMake properly handles the 
@@ -31,13 +31,13 @@ if(WIN32)
 endif(WIN32)
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "-std=c++0x -fPIC ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_FLAGS "-fPIC ${CMAKE_CXX_FLAGS}")
 endif(UNIX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 find_package(LuaJIT REQUIRED)
-find_package(Luabind REQUIRED)
 find_package(SFML REQUIRED system audio)
 find_package(Gsage REQUIRED)
 

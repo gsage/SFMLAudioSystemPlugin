@@ -51,12 +51,17 @@ namespace Gsage {
       /**
        * Registers AudioSystem
        */
-      bool install();
+      bool installImpl();
 
       /**
        * Unregisters AudioSystem
        */
-      void uninstall();
+      void uninstallImpl();
+
+      /**
+       * Set up lua bindings
+       */
+      void setupLuaBindings();
   };
 }
 

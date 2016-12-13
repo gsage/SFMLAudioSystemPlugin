@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <condition_variable>
 
 namespace Gsage {
+  const std::string AudioSystem::ID = "SFMLAudio";
 
   AsyncPlayer::AsyncPlayer()
     : mThread(0)
@@ -120,10 +121,11 @@ namespace Gsage {
     }
   }
 
-  bool AudioSystem::initialize(const DataNode& settings)
+  bool AudioSystem::initialize(const Dictionary& settings)
   {
     EngineSystem::initialize(settings);
     mMaxPlayersCount = settings.get("playersCount", mMaxPlayersCount);
+    return true;
   }
 
   void AudioSystem::updateComponent(AudioComponent* component, Entity* entity, const double& time)

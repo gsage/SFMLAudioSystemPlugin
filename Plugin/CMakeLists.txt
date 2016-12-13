@@ -9,23 +9,13 @@ FILE(GLOB sources src/*.cpp src/*/*.cpp)
 include_directories(
   ${GSAGE_INCLUDE_DIRS}
   ${SFML_INCLUDE_DIR}
-  ${LUABIND_INCLUDE_DIRS}
+  ${LUAJIT_INCLUDE_DIR}
 )
 
-if(WIN32)
-  add_definitions( -DWIN32 )
-endif(WIN32)
+configure()
+gsage_plugin(${LIB_NAME} ${sources})
 
-if(UNIX)
-  set(CMAKE_CXX_FLAGS "-std=c++0x -fPIC ${CMAKE_CXX_FLAGS}")
-endif(UNIX)
-
-add_definitions(-DPLUGIN_EXPORT -D_USRDLL)
-add_library(${LIB_NAME} SHARED ${headers} ${sources})
-
-set_target_properties(${LIB_NAME} PROPERTIES DEBUG_POSTFIX _d)
-
-target_link_libraries(${LIB_NAME} ${GSAGE_LIBRARIES} ${SFML_LIBRARIES} ${LUABIND_LIBRARIES})
+target_link_libraries(${LIB_NAME} ${GSAGE_LIBRARIES} ${SFML_LIBRARIES} ${LUAJIT_LIBRARIES})
 
 install(TARGETS ${LIB_NAME}
         RUNTIME DESTINATION bin
