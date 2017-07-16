@@ -121,7 +121,7 @@ namespace Gsage {
     }
   }
 
-  bool AudioSystem::initialize(const Dictionary& settings)
+  bool AudioSystem::initialize(const DataProxy& settings)
   {
     EngineSystem::initialize(settings);
     mMaxPlayersCount = settings.get("playersCount", mMaxPlayersCount);

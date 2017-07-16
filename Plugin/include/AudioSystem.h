@@ -90,7 +90,7 @@ namespace Gsage {
        * Initialize audio system
        * @param settings: Settings of the system
        */
-      virtual bool initialize(const Dictionary& settings);
+      virtual bool initialize(const DataProxy& settings);
       /**
        * Update a single component
        */
